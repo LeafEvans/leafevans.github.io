@@ -24,11 +24,13 @@ weight = 10
 name = "分类"
 pageRef = "categories"
 weight = 20
+title = "分类"
 
 [[main]]
 name = "标签"
 pageRef = "tags"
 weight = 30
+title = "标签" 
 
 [[footer]]
 name = "关于"
