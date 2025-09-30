@@ -1,0 +1,12 @@
+# Hugo build output directory.
+/public/
+
+# Hugo's asset processing cache.
+/resources/
+
+# Hugo lock file.
+.hugo_build.lock
+
+# OS-generated files
+.DS_Store
+Thumbs.db
