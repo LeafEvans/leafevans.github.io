@@ -14,11 +14,13 @@
 name = "首页"
 pageRef = "/"
 weight = 1
+title = "首页"
 
 [[main]]
 name = "随笔"
 pageRef = "posts"
 weight = 10
+title = "随笔"
 
 [[main]]
 name = "分类"
