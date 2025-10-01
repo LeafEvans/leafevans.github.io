@@ -144,8 +144,8 @@ pre,
     font-family: ChillRoundF, '微软雅黑', 'Arial', sans-serif !important;
 }
 
-textarea {
-    font-family: inherit !important;
+textarea:not(.gsc-monospace-font) {
+    font-family: inherit;
 }
 
 .gsc-reactions-count {
@@ -179,4 +179,8 @@ textarea {
 
 main .gsc-loading-image {
     background-image: url(https://github.githubassets.com/images/mona-loading-default.gif);
+}
+
+textarea.gsc-monospace-font {
+    font-family: MapleMonoNFCN, 'Fira Mono', 'Consolas', 'Menlo', 'Monaco', monospace !important;
 }
