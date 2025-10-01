@@ -2,26 +2,11 @@
 $themeUrl := cond $isDark "https://leafevans.github.io/css/giscus-fire-dark.css"
 "https://leafevans.github.io/css/giscus-fire-light.css" }}
 
-<script
-  src="https://giscus.app/client.js"
-  data-repo="LeafEvans/leafevans.github.io"
-  data-repo-id="R_kgDOPSoBtU"
-  data-category="Comments"
-  data-category-id="DIC_kwDOPSoBtc4CluJp"
-  data-mapping="pathname"
-  data-strict="0"
-  data-reactions-enabled="1"
-  data-emit-metadata="0"
-  data-input-position="bottom"
-  data-theme="{{ $themeUrl }}"
-  data-lang="zh-CN"
-  crossorigin="anonymous"
-  async
-></script>
+<div id="giscus-container"></div>
 
 <script>
   (function () {
-    let isApplyingTheme = false;
+    const THEME_KEY = "giscus-theme-preference";
 
     function getThemeUrl() {
       const isDark = document.documentElement.classList.contains("dark");
@@ -30,81 +15,178 @@ $themeUrl := cond $isDark "https://leafevans.github.io/css/giscus-fire-dark.css"
         : "https://leafevans.github.io/css/giscus-fire-light.css";
     }
 
-    function setGiscusTheme() {
+    function saveThemePreference() {
+      try {
+        localStorage.setItem(
+          THEME_KEY,
+          document.documentElement.classList.contains("dark") ? "dark" : "light"
+        );
+      } catch (e) {}
+    }
+
+    function loadGiscus() {
+      saveThemePreference();
+
+      const container = document.getElementById("giscus-container");
+      container.innerHTML = "";
+
+      const script = document.createElement("script");
+      script.src = "https://giscus.app/client.js";
+      script.setAttribute("data-repo", "LeafEvans/leafevans.github.io");
+      script.setAttribute("data-repo-id", "R_kgDOPSoBtU");
+      script.setAttribute("data-category", "Comments");
+      script.setAttribute("data-category-id", "DIC_kwDOPSoBtc4CluJp");
+      script.setAttribute("data-mapping", "pathname");
+      script.setAttribute("data-strict", "0");
+      script.setAttribute("data-reactions-enabled", "1");
+      script.setAttribute("data-emit-metadata", "0");
+      script.setAttribute("data-input-position", "bottom");
+      script.setAttribute("data-theme", getThemeUrl());
+      script.setAttribute("data-lang", "zh-CN");
+      script.setAttribute("crossorigin", "anonymous");
+      script.async = true;
+
+      container.appendChild(script);
+    }
+
+    const themeObserver = new MutationObserver(() => {
+      saveThemePreference();
+
       const giscusFrame = document.querySelector("iframe.giscus-frame");
-      if (giscusFrame && !isApplyingTheme) {
-        isApplyingTheme = true;
+      if (giscusFrame) {
         try {
           giscusFrame.contentWindow.postMessage(
             { giscus: { setConfig: { theme: getThemeUrl() } } },
             "https://giscus.app"
           );
-          return true;
-        } catch (error) {
-          console.warn("Giscus theme update failed:", error);
-          return false;
-        } finally {
-          setTimeout(() => {
-            isApplyingTheme = false;
-          }, 100);
-        }
+        } catch (e) {}
       }
-      return false;
-    }
-
-    function retrySetTheme(maxRetries = 10, delay = 200) {
-      let retries = 0;
-      const intervalId = setInterval(() => {
-        if (setGiscusTheme() || retries >= maxRetries) {
-          clearInterval(intervalId);
-        }
-        retries++;
-      }, delay);
-    }
-
-    const themeObserver = new MutationObserver(() => {
-      setGiscusTheme();
     });
+
     themeObserver.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["class"],
     });
 
-    window.addEventListener("load", function () {
-      retrySetTheme();
+    function setupMessageListener() {
+      window.addEventListener("message", function (event) {
+        if (event.origin !== "https://giscus.app") return;
 
+        try {
+          const data = event.data;
+
+          if (
+            data &&
+            data.giscus &&
+            (data.giscus.discussion ||
+              data.giscus.error ||
+              data.giscus.authenticated !== undefined)
+          ) {
+            setTimeout(() => {
+              const giscusFrame = document.querySelector("iframe.giscus-frame");
+              if (giscusFrame) {
+                giscusFrame.contentWindow.postMessage(
+                  { giscus: { setConfig: { theme: getThemeUrl() } } },
+                  "https://giscus.app"
+                );
+              }
+            }, 300);
+          }
+        } catch (e) {}
+      });
+    }
+
+    function startPeriodicCheck() {
+      setInterval(() => {
+        const giscusFrame = document.querySelector("iframe.giscus-frame");
+        if (giscusFrame) {
+          const isDark = document.documentElement.classList.contains("dark");
+          const stored = localStorage.getItem(THEME_KEY);
+
+          if (
+            (isDark && stored !== "dark") ||
+            (!isDark && stored !== "light")
+          ) {
+            saveThemePreference();
+
+            try {
+              giscusFrame.contentWindow.postMessage(
+                { giscus: { setConfig: { theme: getThemeUrl() } } },
+                "https://giscus.app"
+              );
+            } catch (e) {}
+          }
+        }
+      }, 2000);
+    }
+
+    function watchDomChanges() {
       const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          mutation.addedNodes.forEach((node) => {
+        for (const mutation of mutations) {
+          for (const node of mutation.addedNodes) {
             if (
               node.nodeName === "IFRAME" &&
-              node.classList.contains("giscus-frame") &&
-              !node.dataset.themeObserved
+              node.classList.contains("giscus-frame")
             ) {
-              node.dataset.themeObserved = "true";
-
               node.addEventListener("load", () => {
-                retrySetTheme(8, 250);
+                setTimeout(() => {
+                  try {
+                    node.contentWindow.postMessage(
+                      { giscus: { setConfig: { theme: getThemeUrl() } } },
+                      "https://giscus.app"
+                    );
+                  } catch (e) {}
+                }, 200);
               });
 
-              setTimeout(() => retrySetTheme(5, 150), 100);
+              setTimeout(() => {
+                try {
+                  node.contentWindow.postMessage(
+                    { giscus: { setConfig: { theme: getThemeUrl() } } },
+                    "https://giscus.app"
+                  );
+                } catch (e) {}
+              }, 100);
             }
-          });
-        });
+          }
+        }
       });
 
-      observer.observe(document.body, {
+      observer.observe(document, {
         childList: true,
         subtree: true,
       });
+    }
 
-      let messageCount = 0;
-      window.addEventListener("message", (event) => {
-        if (event.origin === "https://giscus.app" && messageCount < 3) {
-          messageCount++;
-          setTimeout(setGiscusTheme, 150);
-        }
-      });
+    window.addEventListener("load", function () {
+      loadGiscus();
+
+      setupMessageListener();
+      watchDomChanges();
+      startPeriodicCheck();
+
+      document.addEventListener(
+        "click",
+        function (e) {
+          if (
+            e.target &&
+            (e.target.innerText || "").match(/login|sign|退出|登录/i)
+          ) {
+            setTimeout(() => {
+              const giscusFrame = document.querySelector("iframe.giscus-frame");
+              if (giscusFrame) {
+                try {
+                  giscusFrame.contentWindow.postMessage(
+                    { giscus: { setConfig: { theme: getThemeUrl() } } },
+                    "https://giscus.app"
+                  );
+                } catch (e) {}
+              }
+            }, 1000);
+          }
+        },
+        true
+      );
     });
   })();
 </script>
