@@ -6,6 +6,7 @@
 
     const CONFIG = {
       GISCUS_ORIGIN: "https://giscus.app",
+      BASE_THEME_URL: "https://leafevans.github.io/css/giscus-base.css",
       THEME_URLS: {
         dark: "https://leafevans.github.io/css/giscus-fire-dark.css",
         light: "https://leafevans.github.io/css/giscus-fire-light.css",
@@ -33,16 +34,24 @@
       };
     };
 
-    const updateGiscusTheme = () => {
+    const sendMessage = (message) => {
       const iframe = document.querySelector("iframe.giscus-frame");
-      if (!iframe || !iframe.contentWindow) {
-        return;
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage(
+          { giscus: message },
+          CONFIG.GISCUS_ORIGIN
+        );
       }
+    };
+
+    const updateGiscusTheme = () => {
       const theme = getCurrentTheme();
-      iframe.contentWindow.postMessage(
-        { giscus: { setConfig: { theme: theme.url } } },
-        CONFIG.GISCUS_ORIGIN
-      );
+      sendMessage({ setConfig: { theme: theme.url } });
+    };
+
+    const injectBaseStyles = () => {
+      const css = `@import url('${CONFIG.BASE_THEME_URL}');`;
+      sendMessage({ setConfig: { theme: css } });
     };
 
     const loadGiscus = () => {
@@ -57,7 +66,8 @@
       Object.entries(CONFIG.GISCUS_ATTRS).forEach(([key, value]) => {
         script.setAttribute(key, value);
       });
-      script.setAttribute("data-theme", theme.url);
+      const initialTheme = `@import url('${CONFIG.BASE_THEME_URL}'); @import url('${theme.url}');`;
+      script.setAttribute("data-theme", initialTheme);
 
       container.appendChild(script);
     };
@@ -70,30 +80,6 @@
           attributeFilter: ["class"],
         }
       );
-
-      window.addEventListener("message", (event) => {
-        if (event.origin !== CONFIG.GISCUS_ORIGIN) return;
-        if (event.data?.giscus) {
-          setTimeout(updateGiscusTheme, 100);
-        }
-      });
-
-      new MutationObserver((mutations, observer) => {
-        for (const mutation of mutations) {
-          for (const node of mutation.addedNodes) {
-            if (
-              node.nodeName === "IFRAME" &&
-              node.classList.contains("giscus-frame")
-            ) {
-              node.addEventListener("load", updateGiscusTheme, { once: true });
-              observer.disconnect();
-            }
-          }
-        }
-      }).observe(document.body, {
-        childList: true,
-        subtree: true,
-      });
     };
 
     loadGiscus();
