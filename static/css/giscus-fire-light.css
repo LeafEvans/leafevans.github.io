@@ -13,14 +13,14 @@
 }
 
 @font-face {
-    font-family: 'MapleMonoNFCN';
+    font-family: MapleMonoNFCN;
     src: url('https://leafevans.github.io/fonts/MapleMono-NF-CN-Regular.woff2') format('woff2');
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
-    font-family: 'MapleMonoNFCN';
+    font-family: MapleMonoNFCN;
     src: url('https://leafevans.github.io/fonts/MapleMono-NF-CN-Bold.woff2') format('woff2');
     font-weight: bold;
     font-style: normal;
