@@ -144,8 +144,12 @@ pre,
     font-family: ChillRoundF, '微软雅黑', 'Arial', sans-serif !important;
 }
 
-textarea:not(.gsc-monospace-font) {
+textarea:not([class*="monospace"]) {
     font-family: inherit;
+}
+
+textarea[class*="monospace"] {
+    font-family: MapleMonoNFCN, 'Fira Mono', 'Consolas', 'Menlo', 'Monaco', monospace !important;
 }
 
 .gsc-reactions-count {
