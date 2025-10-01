@@ -2,61 +2,16 @@
 
 <script>
   (function () {
-    const THEME_KEY = "giscus-theme-preference";
-    const GISCUS_ORIGIN = "https://giscus.app";
-    const THEME_URLS = {
-      dark: "https://leafevans.github.io/css/giscus-fire-dark.css",
-      light: "https://leafevans.github.io/css/giscus-fire-light.css",
-    };
+    "use strict";
 
-    function withCurrentTheme(callback) {
-      const isDark = document.documentElement.classList.contains("dark");
-      const theme = isDark ? "dark" : "light";
-      return callback(theme, THEME_URLS[theme]);
-    }
-
-    function updateGiscusTheme(frame) {
-      withCurrentTheme((_, themeUrl) => {
-        try {
-          if (!frame) {
-            frame = document.querySelector("iframe.giscus-frame");
-            if (!frame) return;
-          }
-
-          frame.contentWindow.postMessage(
-            { giscus: { setConfig: { theme: themeUrl } } },
-            GISCUS_ORIGIN
-          );
-        } catch (e) {
-          console.debug("Failed to update Giscus theme:", e);
-        }
-      });
-    }
-
-    function saveThemePreference(updateGiscus = false) {
-      withCurrentTheme((theme) => {
-        try {
-          const stored = localStorage.getItem(THEME_KEY);
-          if (stored !== theme) {
-            localStorage.setItem(THEME_KEY, theme);
-            if (updateGiscus) updateGiscusTheme();
-          }
-        } catch (e) {
-          console.debug("Failed to save theme preference:", e);
-        }
-      });
-    }
-
-    function loadGiscus() {
-      saveThemePreference();
-
-      const container = document.getElementById("giscus-container");
-      container.innerHTML = "";
-
-      const script = document.createElement("script");
-      script.src = `${GISCUS_ORIGIN}/client.js`;
-
-      const attrs = {
+    const CONFIG = {
+      THEME_KEY: "giscus-theme-preference",
+      GISCUS_ORIGIN: "https://giscus.app",
+      THEME_URLS: {
+        dark: "https://leafevans.github.io/css/giscus-fire-dark.css",
+        light: "https://leafevans.github.io/css/giscus-fire-light.css",
+      },
+      GISCUS_ATTRS: {
         "data-repo": "LeafEvans/leafevans.github.io",
         "data-repo-id": "R_kgDOP5oBLw",
         "data-category": "Comments",
@@ -68,21 +23,116 @@
         "data-input-position": "bottom",
         "data-lang": "zh-CN",
         crossorigin: "anonymous",
-      };
+      },
+      DELAYS: {
+        MESSAGE_RESPONSE: [300, 800],
+        IFRAME_LOAD: [100, 200, 600],
+        AUTH_ACTION: [500, 1500, 2500],
+        SYNC_INTERVAL: 5000,
+      },
+    };
 
-      Object.entries(attrs).forEach(([key, value]) => {
+    const getCurrentTheme = () => {
+      const isDark = document.documentElement.classList.contains("dark");
+      return {
+        name: isDark ? "dark" : "light",
+        url: CONFIG.THEME_URLS[isDark ? "dark" : "light"],
+      };
+    };
+
+    const safeLocalStorage = {
+      get: (key) => {
+        try {
+          return localStorage.getItem(key);
+        } catch (e) {
+          console.debug("Failed to read localStorage:", e);
+          return null;
+        }
+      },
+      set: (key, value) => {
+        try {
+          localStorage.setItem(key, value);
+          return true;
+        } catch (e) {
+          console.debug("Failed to write localStorage:", e);
+          return false;
+        }
+      },
+    };
+
+    const getGiscusFrame = () => document.querySelector("iframe.giscus-frame");
+
+    const debounce = (func, wait) => {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    };
+
+    const updateGiscusTheme = (frame = null) => {
+      const { name, url } = getCurrentTheme();
+
+      try {
+        const targetFrame = frame || getGiscusFrame();
+        if (!targetFrame) return;
+
+        targetFrame.contentWindow.postMessage(
+          { giscus: { setConfig: { theme: url } } },
+          CONFIG.GISCUS_ORIGIN
+        );
+
+        safeLocalStorage.set(CONFIG.THEME_KEY, name);
+      } catch (e) {
+        console.debug("Failed to update Giscus theme:", e);
+      }
+    };
+
+    const saveThemePreference = (shouldUpdateGiscus = false) => {
+      const { name } = getCurrentTheme();
+      const stored = safeLocalStorage.get(CONFIG.THEME_KEY);
+
+      if (stored !== name) {
+        safeLocalStorage.set(CONFIG.THEME_KEY, name);
+        if (shouldUpdateGiscus) {
+          updateGiscusTheme();
+        }
+      }
+    };
+
+    const loadGiscus = () => {
+      saveThemePreference();
+
+      const container = document.getElementById("giscus-container");
+      if (!container) return;
+
+      container.innerHTML = "";
+
+      const script = document.createElement("script");
+      script.src = `${CONFIG.GISCUS_ORIGIN}/client.js`;
+      script.async = true;
+
+      Object.entries(CONFIG.GISCUS_ATTRS).forEach(([key, value]) => {
         script.setAttribute(key, value);
       });
 
-      withCurrentTheme((_, themeUrl) => {
-        script.setAttribute("data-theme", themeUrl);
-      });
+      const { url } = getCurrentTheme();
+      script.setAttribute("data-theme", url);
 
-      script.async = true;
       container.appendChild(script);
-    }
+    };
 
-    function initializeEventListeners() {
+    const scheduleUpdates = (delays, frame = null) => {
+      delays.forEach((delay) => {
+        setTimeout(() => updateGiscusTheme(frame), delay);
+      });
+    };
+
+    const setupThemeObserver = () => {
       new MutationObserver(() => saveThemePreference(true)).observe(
         document.documentElement,
         {
@@ -90,36 +140,47 @@
           attributeFilter: ["class"],
         }
       );
+    };
 
+    const setupMessageListener = () => {
       window.addEventListener("message", (event) => {
-        if (event.origin !== GISCUS_ORIGIN) return;
+        if (event.origin !== CONFIG.GISCUS_ORIGIN) return;
 
         try {
-          const data = event.data;
-          if (
-            data?.giscus &&
-            (data.giscus.discussion ||
-              data.giscus.error ||
-              data.giscus.authenticated !== undefined)
-          ) {
-            setTimeout(updateGiscusTheme, 300);
+          const data = event.data?.giscus;
+          if (!data) return;
+
+          const shouldUpdate =
+            data.discussion ||
+            data.error ||
+            data.authenticated !== undefined ||
+            data.viewer !== undefined;
+
+          if (shouldUpdate) {
+            scheduleUpdates(CONFIG.DELAYS.MESSAGE_RESPONSE);
           }
         } catch (e) {
           console.debug("Failed to process Giscus message:", e);
         }
       });
+    };
 
+    const setupIframeObserver = () => {
       new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           mutation.addedNodes.forEach((node) => {
             if (
               node.nodeName === "IFRAME" &&
-              node.classList.contains("giscus-frame")
+              node.classList?.contains("giscus-frame")
             ) {
-              node.addEventListener("load", () =>
-                setTimeout(() => updateGiscusTheme(node), 200)
+              setTimeout(
+                () => updateGiscusTheme(node),
+                CONFIG.DELAYS.IFRAME_LOAD[0]
               );
-              setTimeout(() => updateGiscusTheme(node), 100);
+
+              node.addEventListener("load", () => {
+                scheduleUpdates(CONFIG.DELAYS.IFRAME_LOAD.slice(1), node);
+              });
             }
           });
         });
@@ -127,26 +188,50 @@
         childList: true,
         subtree: true,
       });
+    };
+
+    const setupAuthListener = () => {
+      const authPattern = /login|sign|退出|登录/i;
 
       document.addEventListener(
         "click",
         (e) => {
-          if (
-            e.target &&
-            (e.target.innerText || "").match(/login|sign|退出|登录/i)
-          ) {
-            setTimeout(updateGiscusTheme, 1000);
+          const text = e.target?.innerText || e.target?.textContent || "";
+          if (authPattern.test(text)) {
+            scheduleUpdates(CONFIG.DELAYS.AUTH_ACTION);
           }
         },
         true
       );
+    };
 
-      setInterval(saveThemePreference, 5000);
-    }
+    const setupPeriodicSync = () => {
+      setInterval(() => {
+        saveThemePreference();
+        const frame = getGiscusFrame();
+        if (frame) {
+          updateGiscusTheme(frame);
+        }
+      }, CONFIG.DELAYS.SYNC_INTERVAL);
+    };
 
-    window.addEventListener("load", () => {
+    const initializeEventListeners = () => {
+      setupThemeObserver();
+      setupMessageListener();
+      setupIframeObserver();
+      setupAuthListener();
+      setupPeriodicSync();
+    };
+
+    const initialize = () => {
       loadGiscus();
       initializeEventListeners();
-    });
+    };
+
+    if (document.readyState === "loading") {
+      window.addEventListener("load", initialize);
+    } else {
+      initialize();
+    }
   })();
 </script>
