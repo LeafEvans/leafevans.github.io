@@ -132,13 +132,13 @@ forgejoDefaultServer = "https://v11.next.forgejo.org"
   cardViewScreenWidth = false
 
 [firebase]
-  # apiKey = "XXXXXX"
-  # authDomain = "XXXXXX"
-  # projectId = "XXXXXX"
-  # storageBucket = "XXXXXX"
-  # messagingSenderId = "XXXXXX"
-  # appId = "XXXXXX"
-  # measurementId = "XXXXXX"
+  apiKey = "AIzaSyCxLb5H8T62_fTgSw2PAqFrj-CJTe05UUM"
+  authDomain = "evans--whimsical-thoughts.firebaseapp.com"
+  projectId = "evans--whimsical-thoughts"
+  storageBucket = "evans--whimsical-thoughts.firebasestorage.app"
+  messagingSenderId = "600902429103"
+  appId = "1:600902429103:web:d92ad9eaaa9dd68b84a75a"
+  measurementId = "G-5JH3KR8CLM"
 
 [fathomAnalytics]
   # site = "ABC12345"
