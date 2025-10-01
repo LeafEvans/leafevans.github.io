@@ -17,38 +17,56 @@
 
 <script>
   window.addEventListener("load", function () {
-    const observer = new MutationObserver(() => {
+    function getThemeUrl() {
       const isDark = document.documentElement.classList.contains("dark");
+      return isDark
+        ? "https://leafevans.github.io/css/giscus-fire-dark.css"
+        : "https://leafevans.github.io/css/giscus-fire-light.css";
+    }
+
+    function setGiscusTheme() {
       const giscusFrame = document.querySelector("iframe.giscus-frame");
-
       if (giscusFrame) {
-        const theme = isDark
-          ? "https://leafevans.github.io/css/giscus-fire-dark.css"
-          : "https://leafevans.github.io/css/giscus-fire-light.css";
-        giscusFrame.contentWindow.postMessage(
-          { giscus: { setConfig: { theme: theme } } },
-          "https://giscus.app"
-        );
+        try {
+          giscusFrame.contentWindow.postMessage(
+            { giscus: { setConfig: { theme: getThemeUrl() } } },
+            "https://giscus.app"
+          );
+        } catch (error) {
+          console.warn("Failed to set Giscus theme:", error);
+        }
       }
-    });
+    }
 
-    observer.observe(document.documentElement, {
+    const themeObserver = new MutationObserver(setGiscusTheme);
+    themeObserver.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["class"],
     });
 
-    const isDark = document.documentElement.classList.contains("dark");
-    setTimeout(() => {
-      const giscusFrame = document.querySelector("iframe.giscus-frame");
-      if (giscusFrame) {
-        const theme = isDark
-          ? "https://leafevans.github.io/css/giscus-fire-dark.css"
-          : "https://leafevans.github.io/css/giscus-fire-light.css";
-        giscusFrame.contentWindow.postMessage(
-          { giscus: { setConfig: { theme: theme } } },
-          "https://giscus.app"
-        );
-      }
-    }, 500);
+    const giscusContainer = document.querySelector(".giscus");
+    if (giscusContainer) {
+      const iframeObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          mutation.addedNodes.forEach((node) => {
+            if (
+              node.nodeName === "IFRAME" &&
+              node.classList.contains("giscus-frame")
+            ) {
+              node.addEventListener("load", () => {
+                setTimeout(setGiscusTheme, 200);
+              });
+            }
+          });
+        });
+      });
+
+      iframeObserver.observe(giscusContainer, {
+        childList: true,
+        subtree: true,
+      });
+    }
+
+    setTimeout(setGiscusTheme, 500);
   });
 </script>
