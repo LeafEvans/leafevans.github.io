@@ -1,0 +1,54 @@
+<script
+  src="https://giscus.app/client.js"
+  data-repo="LeafEvans/leafevans.github.io"
+  data-repo-id="R_kgDOPSoBtU"
+  data-category="Comments"
+  data-category-id="DIC_kwDOPSoBtc4CluJp"
+  data-mapping="pathname"
+  data-strict="0"
+  data-reactions-enabled="1"
+  data-emit-metadata="0"
+  data-input-position="bottom"
+  data-theme="https://leafevans.github.io/css/giscus-fire-light.css"
+  data-lang="zh-CN"
+  crossorigin="anonymous"
+  async
+></script>
+
+<script>
+  window.addEventListener("load", function () {
+    const observer = new MutationObserver(() => {
+      const isDark = document.documentElement.classList.contains("dark");
+      const giscusFrame = document.querySelector("iframe.giscus-frame");
+
+      if (giscusFrame) {
+        const theme = isDark
+          ? "https://leafevans.github.io/css/giscus-fire-dark.css"
+          : "https://leafevans.github.io/css/giscus-fire-light.css";
+        giscusFrame.contentWindow.postMessage(
+          { giscus: { setConfig: { theme: theme } } },
+          "https://giscus.app"
+        );
+      }
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    const isDark = document.documentElement.classList.contains("dark");
+    setTimeout(() => {
+      const giscusFrame = document.querySelector("iframe.giscus-frame");
+      if (giscusFrame) {
+        const theme = isDark
+          ? "https://leafevans.github.io/css/giscus-fire-dark.css"
+          : "https://leafevans.github.io/css/giscus-fire-light.css";
+        giscusFrame.contentWindow.postMessage(
+          { giscus: { setConfig: { theme: theme } } },
+          "https://giscus.app"
+        );
+      }
+    }, 500);
+  });
+</script>

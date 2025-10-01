@@ -1,0 +1,83 @@
+@font-face {
+    font-family: ChillRoundF;
+    src: url('https://leafevans.github.io/fonts/ChillRoundFRegular.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: ChillRoundF;
+    src: url('https://leafevans.github.io/fonts/ChillRoundFBold.woff2') format('woff2');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'MapleMonoNFCN';
+    src: url('https://leafevans.github.io/fonts/MapleMono-NF-CN-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'MapleMonoNFCN';
+    src: url('https://leafevans.github.io/fonts/MapleMono-NF-CN-Bold.woff2') format('woff2');
+    font-weight: bold;
+    font-style: normal;
+}
+
+main {
+    --color-prettylights-syntax-comment: #787775;
+    --color-prettylights-syntax-constant: #ea580c;
+    --color-prettylights-syntax-entity: #e11d48;
+    --color-prettylights-syntax-storage-modifier-import: #292524;
+    --color-prettylights-syntax-entity-tag: #f97316;
+    --color-prettylights-syntax-keyword: #e11d48;
+    --color-prettylights-syntax-string: #ea580c;
+    --color-prettylights-syntax-variable: #f59e0b;
+    --color-prettylights-syntax-brackethighlighter-unmatched: #dc2626;
+    --color-prettylights-syntax-invalid-illegal-text: #fafaf9;
+    --color-prettylights-syntax-invalid-illegal-bg: #991b1b;
+    --color-prettylights-syntax-carriage-return-text: #fafaf9;
+    --color-prettylights-syntax-carriage-return-bg: #dc2626;
+    --color-prettylights-syntax-string-regexp: #f97316;
+    --color-prettylights-syntax-markup-list: #78350f;
+    --color-prettylights-syntax-markup-heading: #ea580c;
+    --color-prettylights-syntax-markup-italic: #292524;
+    --color-prettylights-syntax-markup-bold: #292524;
+    --color-prettylights-syntax-markup-deleted-text: #dc2626;
+    --color-prettylights-syntax-markup-deleted-bg: #fee2e2;
+    --color-prettylights-syntax-markup-inserted-text: #f97316;
+    --color-prettylights-syntax-markup-inserted-bg: #ffedd5;
+    --color-prettylights-syntax-markup-changed-text: #f59e0b;
+    --color-prettylights-syntax-markup-changed-bg: #fef3c7;
+    --color-prettylights-syntax-markup-ignored-text: #e7e5e4;
+    --color-prettylights-syntax-markup-ignored-bg: #ea580c;
+    --color-prettylights-syntax-meta-diff-range: #e11d48;
+    --color-primer-canvas-backdrop: rgba(41, 37, 36, 0.5);
+    --color-primer-canvas-sticky: rgba(255, 255, 255, 0.95);
+
+    --color-accent-fg: #f97316;
+    --color-accent-emphasis: #ea580c;
+    --color-attention-subtle: #fef3c7;
+    --color-danger-fg: #e11d48;
+
+    font-family: ChillRoundF, '微软雅黑', 'Arial', sans-serif !important;
+}
+
+code,
+pre,
+.markdown code,
+.markdown pre {
+    font-family: MapleMonoNFCN, 'Fira Mono', 'Consolas', 'Menlo', 'Monaco', monospace !important;
+}
+
+.gsc-comment-content,
+.gsc-reply-content,
+.gsc-reactions-count,
+.gsc-comment-author-name,
+.gsc-comment-header-author-name,
+textarea,
+.gsc-timeline-header {
+    font-family: ChillRoundF, '微软雅黑', 'Arial', sans-serif !important;
+}
