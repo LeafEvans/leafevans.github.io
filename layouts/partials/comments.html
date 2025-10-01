@@ -23,66 +23,22 @@
         "data-lang": "zh-CN",
         crossorigin: "anonymous",
       },
-      FONT_FAMILY:
-        'MapleMonoNFCN, "Fira Mono", Consolas, Menlo, Monaco, monospace',
-      FONT_POLL_INTERVAL: 300,
     };
 
     const GiscusController = {
-      getTheme() {
+      getThemeUrl() {
         const isDark = document.documentElement.classList.contains("dark");
-        return {
-          name: isDark ? "dark" : "light",
-          url: CONFIG.THEME_URLS[isDark ? "dark" : "light"],
-        };
-      },
-
-      getIframe() {
-        return document.querySelector("iframe.giscus-frame");
-      },
-
-      postMessage(message) {
-        const iframe = this.getIframe();
-        if (iframe?.contentWindow) {
-          iframe.contentWindow.postMessage(
-            { giscus: message },
-            CONFIG.GISCUS_ORIGIN
-          );
-          return true;
-        }
-        return false;
+        return CONFIG.THEME_URLS[isDark ? "dark" : "light"];
       },
 
       updateTheme() {
-        this.postMessage({ setConfig: { theme: this.getTheme().url } });
-      },
+        const iframe = document.querySelector("iframe.giscus-frame");
+        if (!iframe?.contentWindow) return;
 
-      forceMonospace() {
-        const iframe = this.getIframe();
-        if (!iframe) return;
-
-        try {
-          const doc = iframe.contentDocument || iframe.contentWindow?.document;
-          if (doc) {
-            const textareas = doc.querySelectorAll(
-              'textarea[style*="monospace"]'
-            );
-            textareas.forEach((textarea) => {
-              if (textarea.style.fontFamily.includes("ui-monospace")) {
-                textarea.style.fontFamily = CONFIG.FONT_FAMILY;
-              }
-            });
-            return;
-          }
-        } catch (e) {}
-
-        this.postMessage({
-          injectStyles: `
-            textarea[style*="monospace"] {
-              font-family: ${CONFIG.FONT_FAMILY} !important;
-            }
-          `,
-        });
+        const message = {
+          giscus: { setConfig: { theme: this.getThemeUrl() } },
+        };
+        iframe.contentWindow.postMessage(message, CONFIG.GISCUS_ORIGIN);
       },
 
       init() {
@@ -97,7 +53,7 @@
         const script = document.createElement("script");
         script.src = `${CONFIG.GISCUS_ORIGIN}/client.js`;
         script.async = true;
-        script.setAttribute("data-theme", this.getTheme().url);
+        script.setAttribute("data-theme", this.getThemeUrl());
 
         Object.entries(CONFIG.GISCUS_ATTRS).forEach(([key, value]) => {
           script.setAttribute(key, value);
@@ -109,82 +65,14 @@
       setupEventListeners() {
         new MutationObserver(() => this.updateTheme()).observe(
           document.documentElement,
-          {
-            attributes: true,
-            attributeFilter: ["class"],
-          }
+          { attributes: true, attributeFilter: ["class"] }
         );
 
         window.addEventListener("message", (event) => {
-          if (event.origin !== CONFIG.GISCUS_ORIGIN || !event.data?.giscus)
-            return;
-
-          requestAnimationFrame(() => {
+          if (event.origin === CONFIG.GISCUS_ORIGIN && event.data?.giscus) {
             this.updateTheme();
-            this.forceMonospace();
-          });
-        });
-
-        this.watchForIframe();
-        this.setupFontPolling();
-      },
-
-      watchForIframe() {
-        new MutationObserver((mutations, observer) => {
-          for (const mutation of mutations) {
-            for (const node of mutation.addedNodes) {
-              if (
-                node.nodeName === "IFRAME" &&
-                node.classList.contains("giscus-frame")
-              ) {
-                node.addEventListener(
-                  "load",
-                  () => {
-                    setTimeout(() => {
-                      this.updateTheme();
-                      this.forceMonospace();
-                    }, 100);
-                  },
-                  { once: true }
-                );
-                observer.disconnect();
-                return;
-              }
-            }
           }
-        }).observe(document.body, {
-          childList: true,
-          subtree: true,
         });
-      },
-
-      setupFontPolling() {
-        let pollCount = 0;
-        const maxPolls = 20;
-
-        const pollInterval = setInterval(() => {
-          this.forceMonospace();
-          pollCount++;
-
-          if (pollCount >= maxPolls) {
-            clearInterval(pollInterval);
-
-            const iframe = this.getIframe();
-            if (iframe?.contentDocument) {
-              try {
-                new MutationObserver(() => this.forceMonospace()).observe(
-                  iframe.contentDocument.body,
-                  {
-                    childList: true,
-                    subtree: true,
-                    attributes: true,
-                    attributeFilter: ["style", "class"],
-                  }
-                );
-              } catch (e) {}
-            }
-          }
-        }, CONFIG.FONT_POLL_INTERVAL);
       },
     };
 

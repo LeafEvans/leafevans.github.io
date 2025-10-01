@@ -27,6 +27,8 @@
 }
 
 main {
+    --font-sans: ChillRoundF, '微软雅黑', Arial, sans-serif;
+    --font-mono: MapleMonoNFCN, 'Fira Mono', Consolas, Menlo, Monaco, monospace;
     --color-prettylights-syntax-comment: #a8a29e;
     --color-prettylights-syntax-constant: #fb923c;
     --color-prettylights-syntax-entity: #fb7185;
@@ -109,39 +111,27 @@ main {
     --color-scale-blue-8: #9a3412;
     --color-social-reaction-bg-hover: var(--color-scale-gray-7);
     --color-social-reaction-bg-reacted-hover: var(--color-scale-blue-8);
-    font-family: ChillRoundF, '微软雅黑', Arial, sans-serif !important;
+    font-family: var(--font-sans) !important;
 }
 
 code,
 pre,
-.markdown code,
-.markdown pre {
-    font-family: MapleMonoNFCN, 'Fira Mono', Consolas, Menlo, Monaco, monospace !important;
-}
-
-.gsc-comment-content,
-.gsc-reply-content,
-.gsc-comment-author-name,
-.gsc-comment-header-author-name,
-.gsc-timeline-header {
-    font-family: ChillRoundF, '微软雅黑', Arial, sans-serif !important;
+textarea[data-monospace],
+textarea[class*="mono"],
+textarea.gsc-monospace-font {
+    font-family: var(--font-mono) !important;
 }
 
 textarea {
     font-family: inherit;
 }
 
-textarea[data-monospace],
-textarea[class*="mono"],
-textarea.gsc-monospace-font {
-    font-family: MapleMonoNFCN, 'Fira Mono', Consolas, Menlo, Monaco, monospace !important;
-}
-
 .gsc-reactions-count {
     display: none;
 }
 
-.gsc-timeline {
+.gsc-comments {
+    display: flex;
     flex-direction: column-reverse;
 }
 
@@ -149,17 +139,8 @@ textarea.gsc-monospace-font {
     padding-bottom: 1rem;
 }
 
-.gsc-comments > .gsc-header {
-    order: 1;
-}
-
-.gsc-comments > .gsc-comment-box {
+.gsc-comment-box {
     margin-bottom: 1rem;
-    order: 2;
-}
-
-.gsc-comments > .gsc-timeline {
-    order: 3;
 }
 
 .gsc-homepage-bg {
