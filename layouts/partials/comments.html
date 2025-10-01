@@ -25,10 +25,10 @@
         crossorigin: "anonymous",
       },
       DELAYS: {
-        MESSAGE_RESPONSE: [300, 800],
-        IFRAME_LOAD: [100, 200, 600],
-        AUTH_ACTION: [500, 1500, 2500],
-        SYNC_INTERVAL: 5000,
+        MESSAGE_RESPONSE: [50, 200],
+        IFRAME_LOAD: [0, 100, 300],
+        AUTH_ACTION: [0, 100, 300, 600],
+        SYNC_INTERVAL: 2000,
       },
     };
 
@@ -62,30 +62,19 @@
 
     const getGiscusFrame = () => document.querySelector("iframe.giscus-frame");
 
-    const debounce = (func, wait) => {
-      let timeout;
-      return function executedFunction(...args) {
-        const later = () => {
-          clearTimeout(timeout);
-          func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-      };
-    };
+    let lastThemeState = null;
 
     const updateGiscusTheme = (frame = null) => {
       const { name, url } = getCurrentTheme();
-
+      lastThemeState = name;
       try {
         const targetFrame = frame || getGiscusFrame();
         if (!targetFrame) return;
-
+        targetFrame.dataset.expectedTheme = name;
         targetFrame.contentWindow.postMessage(
           { giscus: { setConfig: { theme: url } } },
           CONFIG.GISCUS_ORIGIN
         );
-
         safeLocalStorage.set(CONFIG.THEME_KEY, name);
       } catch (e) {
         console.debug("Failed to update Giscus theme:", e);
@@ -95,7 +84,6 @@
     const saveThemePreference = (shouldUpdateGiscus = false) => {
       const { name } = getCurrentTheme();
       const stored = safeLocalStorage.get(CONFIG.THEME_KEY);
-
       if (stored !== name) {
         safeLocalStorage.set(CONFIG.THEME_KEY, name);
         if (shouldUpdateGiscus) {
@@ -106,23 +94,17 @@
 
     const loadGiscus = () => {
       saveThemePreference();
-
       const container = document.getElementById("giscus-container");
       if (!container) return;
-
       container.innerHTML = "";
-
       const script = document.createElement("script");
       script.src = `${CONFIG.GISCUS_ORIGIN}/client.js`;
       script.async = true;
-
       Object.entries(CONFIG.GISCUS_ATTRS).forEach(([key, value]) => {
         script.setAttribute(key, value);
       });
-
       const { url } = getCurrentTheme();
       script.setAttribute("data-theme", url);
-
       container.appendChild(script);
     };
 
@@ -133,30 +115,33 @@
     };
 
     const setupThemeObserver = () => {
-      new MutationObserver(() => saveThemePreference(true)).observe(
-        document.documentElement,
-        {
-          attributes: true,
-          attributeFilter: ["class"],
-        }
-      );
+      new MutationObserver(() => {
+        updateGiscusTheme();
+        saveThemePreference();
+      }).observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["class"],
+      });
     };
 
     const setupMessageListener = () => {
       window.addEventListener("message", (event) => {
         if (event.origin !== CONFIG.GISCUS_ORIGIN) return;
-
         try {
           const data = event.data?.giscus;
           if (!data) return;
-
+          if (data.authenticated === false) {
+            updateGiscusTheme();
+            scheduleUpdates(CONFIG.DELAYS.AUTH_ACTION);
+            return;
+          }
           const shouldUpdate =
             data.discussion ||
             data.error ||
             data.authenticated !== undefined ||
             data.viewer !== undefined;
-
           if (shouldUpdate) {
+            updateGiscusTheme();
             scheduleUpdates(CONFIG.DELAYS.MESSAGE_RESPONSE);
           }
         } catch (e) {
@@ -166,6 +151,17 @@
     };
 
     const setupIframeObserver = () => {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (
+            entry.isIntersecting &&
+            entry.target.classList?.contains("giscus-frame")
+          ) {
+            updateGiscusTheme(entry.target);
+          }
+        });
+      });
+
       new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           mutation.addedNodes.forEach((node) => {
@@ -173,12 +169,10 @@
               node.nodeName === "IFRAME" &&
               node.classList?.contains("giscus-frame")
             ) {
-              setTimeout(
-                () => updateGiscusTheme(node),
-                CONFIG.DELAYS.IFRAME_LOAD[0]
-              );
-
+              updateGiscusTheme(node);
+              observer.observe(node);
               node.addEventListener("load", () => {
+                updateGiscusTheme(node);
                 scheduleUpdates(CONFIG.DELAYS.IFRAME_LOAD.slice(1), node);
               });
             }
@@ -191,13 +185,13 @@
     };
 
     const setupAuthListener = () => {
-      const authPattern = /login|sign|退出|登录/i;
-
+      const authPattern = /login|sign|退出|登录|log out|sign out/i;
       document.addEventListener(
         "click",
         (e) => {
           const text = e.target?.innerText || e.target?.textContent || "";
           if (authPattern.test(text)) {
+            updateGiscusTheme();
             scheduleUpdates(CONFIG.DELAYS.AUTH_ACTION);
           }
         },
@@ -207,10 +201,14 @@
 
     const setupPeriodicSync = () => {
       setInterval(() => {
-        saveThemePreference();
-        const frame = getGiscusFrame();
-        if (frame) {
-          updateGiscusTheme(frame);
+        const { name } = getCurrentTheme();
+        if (lastThemeState !== name) {
+          updateGiscusTheme();
+        } else {
+          const frame = getGiscusFrame();
+          if (frame && frame.dataset.expectedTheme !== name) {
+            updateGiscusTheme(frame);
+          }
         }
       }, CONFIG.DELAYS.SYNC_INTERVAL);
     };
@@ -224,6 +222,14 @@
     };
 
     const initialize = () => {
+      const style = document.createElement("style");
+      style.textContent = `
+        iframe.giscus-frame {
+          transition: background-color 0.2s ease;
+        }
+      `;
+      document.head.appendChild(style);
+      lastThemeState = getCurrentTheme().name;
       loadGiscus();
       initializeEventListeners();
     };
