@@ -21,6 +21,8 @@ $themeUrl := cond $isDark "https://leafevans.github.io/css/giscus-fire-dark.css"
 
 <script>
   (function () {
+    let isApplyingTheme = false;
+
     function getThemeUrl() {
       const isDark = document.documentElement.classList.contains("dark");
       return isDark
@@ -30,7 +32,8 @@ $themeUrl := cond $isDark "https://leafevans.github.io/css/giscus-fire-dark.css"
 
     function setGiscusTheme() {
       const giscusFrame = document.querySelector("iframe.giscus-frame");
-      if (giscusFrame) {
+      if (giscusFrame && !isApplyingTheme) {
+        isApplyingTheme = true;
         try {
           giscusFrame.contentWindow.postMessage(
             { giscus: { setConfig: { theme: getThemeUrl() } } },
@@ -38,43 +41,70 @@ $themeUrl := cond $isDark "https://leafevans.github.io/css/giscus-fire-dark.css"
           );
           return true;
         } catch (error) {
+          console.warn("Giscus theme update failed:", error);
           return false;
+        } finally {
+          setTimeout(() => {
+            isApplyingTheme = false;
+          }, 100);
         }
       }
       return false;
     }
 
-    const themeObserver = new MutationObserver(setGiscusTheme);
+    function retrySetTheme(maxRetries = 10, delay = 200) {
+      let retries = 0;
+      const intervalId = setInterval(() => {
+        if (setGiscusTheme() || retries >= maxRetries) {
+          clearInterval(intervalId);
+        }
+        retries++;
+      }, delay);
+    }
+
+    const themeObserver = new MutationObserver(() => {
+      setGiscusTheme();
+    });
     themeObserver.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["class"],
     });
 
     window.addEventListener("load", function () {
-      setTimeout(setGiscusTheme, 500);
+      retrySetTheme();
 
-      const giscusContainer = document.querySelector(".giscus");
-      if (giscusContainer) {
-        const iframeObserver = new MutationObserver((mutations) => {
-          mutations.forEach((mutation) => {
-            mutation.addedNodes.forEach((node) => {
-              if (
-                node.nodeName === "IFRAME" &&
-                node.classList.contains("giscus-frame")
-              ) {
-                node.addEventListener("load", () => {
-                  setTimeout(setGiscusTheme, 200);
-                });
-              }
-            });
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          mutation.addedNodes.forEach((node) => {
+            if (
+              node.nodeName === "IFRAME" &&
+              node.classList.contains("giscus-frame") &&
+              !node.dataset.themeObserved
+            ) {
+              node.dataset.themeObserved = "true";
+
+              node.addEventListener("load", () => {
+                retrySetTheme(8, 250);
+              });
+
+              setTimeout(() => retrySetTheme(5, 150), 100);
+            }
           });
         });
+      });
 
-        iframeObserver.observe(giscusContainer, {
-          childList: true,
-          subtree: true,
-        });
-      }
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+
+      let messageCount = 0;
+      window.addEventListener("message", (event) => {
+        if (event.origin === "https://giscus.app" && messageCount < 3) {
+          messageCount++;
+          setTimeout(setGiscusTheme, 150);
+        }
+      });
     });
   })();
 </script>
