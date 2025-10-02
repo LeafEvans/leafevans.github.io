@@ -3,7 +3,7 @@
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 [![Hugo](https://img.shields.io/badge/Hugo-Blowfish-FF4088)](https://blowfish.page/)
 
-一个偶尔正经、持续学习的弱鸡。博客内容随机掉落：代码、游戏，以及一些关于如何更好地忍耐生活的思考。
+一个偶尔正经、持续学习的蒟蒻。博客内容随机掉落：代码、游戏，以及一些关于如何更好地生活的思考。
 
 🔗 访问网站: [https://leafevans.github.io](https://leafevans.github.io)
 
