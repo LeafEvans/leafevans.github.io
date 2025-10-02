@@ -2,11 +2,5 @@
   "qq": {
     "icon": "qq",
     "title": "sharing.qq",
-    "url": "https://connect.qq.com/widget/shareqq/index.html?url=%s&title=%s"
-  },
-  "qzone": {
-    "icon": "qzone",
-    "title": "sharing.qzone",
-    "url": "https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=%s&title=%s"
-  }
-}
+    "url": "https://connect.qq.com/widget/shareqq/index.html?url=%s&title=%s&desc=%s&pics=%s&site=%s"
+  }}
