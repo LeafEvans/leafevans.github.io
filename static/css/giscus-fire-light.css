@@ -126,32 +126,6 @@ textarea {
     font-family: inherit;
 }
 
-.gsc-reactions-count {
-    display: none;
-}
-
-.gsc-comments {
-    display: flex;
-    flex-direction: column;
-}
-
-.gsc-comments-footer {
-    order: 1;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--color-border-default);
-}
-
-.gsc-timeline {
-    order: 2;
-    padding-top: 1rem;
-}
-
-.gsc-comment-box-container {
-    order: 3;
-    margin-top: 1rem;
-    border-top: 1px solid var(--color-border-default);
-}
-
 .gsc-homepage-bg {
     background-color: #fafaf9;
 }
