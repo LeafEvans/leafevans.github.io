@@ -136,17 +136,18 @@ textarea {
 }
 
 .gsc-comment-box-container {
-    order: -2;
+    order: -3;
 }
 
-.gsc-header {
-    order: -1;
-    padding-bottom: 1rem;
+.gsc-comments-footer {
+    order: -2;
     padding-top: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--color-border-default);
 }
 
 .gsc-timeline {
-    order: 0;
+    order: -1;
 }
 
 .gsc-homepage-bg {
