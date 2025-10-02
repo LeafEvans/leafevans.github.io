@@ -132,15 +132,21 @@ textarea {
 
 .gsc-comments {
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
+}
+
+.gsc-comment-box-container {
+    order: -2;
 }
 
 .gsc-header {
+    order: -1;
     padding-bottom: 1rem;
+    padding-top: 1rem;
 }
 
-.gsc-comment-box {
-    margin-bottom: 1rem;
+.gsc-timeline {
+    order: 0;
 }
 
 .gsc-homepage-bg {
