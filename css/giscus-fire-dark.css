@@ -115,6 +115,26 @@ main {
     font-size: 12pt !important;
 }
 
+main,
+main *,
+.gsc-comment-box,
+.gsc-comment-box-textarea,
+.gsc-comments-count,
+.gsc-comments-footer,
+.gsc-timeline,
+.gsc-header,
+.gsc-comment-author,
+.gsc-comment-content,
+.gsc-reactions-count,
+.gsc-comment,
+.gsc-social-reaction-summary-item,
+button,
+input,
+select,
+textarea {
+    font-size: 12pt !important;
+}
+
 code,
 pre,
 textarea[data-monospace],
