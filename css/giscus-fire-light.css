@@ -112,6 +112,7 @@ main {
     --color-social-reaction-bg-hover: var(--color-scale-gray-7);
     --color-social-reaction-bg-reacted-hover: var(--color-scale-blue-8);
     font-family: var(--font-sans) !important;
+    font-size: 12pt !important;
 }
 
 code,
@@ -124,6 +125,7 @@ textarea.gsc-monospace-font {
 
 textarea {
     font-family: inherit;
+    font-size: 12pt !important;
 }
 
 .gsc-homepage-bg {
